@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>web deploper</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: black; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { background: black; padding: 50px; border-radius:12px; box-shadow: 0 4px 12px yellow; width: 100%; max-width: 450px; }
+        h2 { text-align: center; color: gold;font-size:29px; margin-bottom: 30px;text-shadow: 2px 2px 4px yellow;border:3px solid aqua;padding:60px 10px;border-radius:50%;width:190px;height:190px;align-items:center;display:block;margin: 0 auto;box-shadow: 0 0 25px yellow;background-image:url("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ9EO4aV6_CmcMd1iKquJWU-XYFpIx-LNTbV7--elRJHg&s=10"
+);background-position:center;background-size:cover;background-repeat:no-repeat;}
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+        button { width: 100%; padding: 12px; background: gold; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button:hover { background: blue; }
+        button:hover { transform:scale(1.1)}
+        .toggle { text-align: center; margin-top: 15px; font-size: 14px; color: #555; }
+        .toggle a { color: green; text-decoration: none; font-weight: bold; cursor: pointer; }
+        #dashboard { display: none; }
+        #message { text-align: center; margin-top: 10px; color: red; font-size: 14px; }
+        #userEmail { font-weight: bold; color: #25D366; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="authContainer">
+    <h2 id="formTitle">Login</h2>
+    <p style="text-align:center;color:blue;text-shadow:2px 2px 4px yellow;">Selamat datang members</p>
+    
+    <div id="loginForm">
+        <input type="email" id="loginEmail" placeholder="Email atau no HP" required>
+        <input type="password" id="loginPassword" placeholder="Password" required>
+        <button onclick="login()">Login</button>
+        <button onclick="lupaPasword()" style="background:gray;">Lupa Pasword</button>
+    </div>
+
+    <div id="registerForm" style="display:none;">
+        <input type="email" id="regEmail" placeholder="Email" required>
+        <input type="password" id="regPassword" placeholder="Password min 6 karakter" required>
+        <button onclick="register()">Daftar</button>
+    </div>
+
+    <p id="message"></p>
+    
+    <div class="toggle">
+        <span id="toggleText">Belum punya akun?</span>
+        <a onclick="toggleForm()">Daftar di sini</a>
+    </div>
+</div>
+
+<div class="container" id="dashboard">
+    <h2 style="color:white;"></h2>
+    <p style="color:greenyellow;text-align:center;">Email kamu: <span id="userEmail"></span></p>
+    <p style="margin-top:15px;color:red;text-align:center;text-shadow:2px 2px 4px yellow;">Selamat Datang Di OWL SCREAT INVISIBILITY.</p>
+     <button class="masuka" onclick="window.location.href='hal-2.html'">MASUK</button>
+
+    <button onclick="logout()" style="background:#ff4d4d; margin-top:20px;">Logout</button>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    // === 1. GANTI 2 BARIS INI DENGAN PUNYA KAMU ===
+    const SUPABASE_URL = 'https://ddrdrfmfaefprjjzfbfa.supabase.co'
+    const SUPABASE_KEY = 'sb_publishable_BTQvABIoYy4QMWWmeO41vQ_gVWu7y9z'
+    
+    const { createClient } = supabase
+    const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+
+    const authContainer = document.getElementById('authContainer');
+    const dashboard = document.getElementById('dashboard');
+    const message = document.getElementById('message');
+
+    // Cek kalau user sudah login
+    _supabase.auth.getSession().then(({ data: { session }}) => {
+        if(session) showDashboard(session.user.email);
+    })
+
+    function toggleForm() {
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const formTitle = document.getElementById('formTitle');
+        const toggleText = document.getElementById('toggleText');
+        
+        if(loginForm.style.display === 'none'){
+            loginForm.style.display = 'block';
+            registerForm.style.display = 'none';
+            formTitle.innerText = 'Login';
+            toggleText.innerText = 'Belum punya akun?';
+        } else {
+            loginForm.style.display = 'none';
+            registerForm.style.display = 'block';
+            formTitle.innerText = 'Daftar';
+            toggleText.innerText = 'Sudah punya akun?';
+        }
+        message.innerText = '';
+    }
+
+    async function register() {
+        const email = document.getElementById('regEmail').value;
+        const password = document.getElementById('regPassword').value;
+        message.style.color = 'blue';
+        message.innerText = 'Mendaftar...';
+        
+        const { data, error } = await _supabase.auth.signUp({ email, password });
+        
+        if(error){
+            message.style.color = 'red';
+            message.innerText = 'Error: ' + error.message;
+        } else {
+            message.style.color = 'green';
+            message.innerText = 'Daftar berhasil! Silakan Login.';
+            toggleForm();
+        }
+    }
+
+    async function login() {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        message.style.color = 'blue';
+        message.innerText = 'Login...';
+
+        const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+
+        if(error){
+            message.style.color = 'red';
+            message.innerText = 'Error: ' + error.message;
+        } else {
+            showDashboard(data.user.email);
+        }
+    }
+
+    async function logout() {
+        await _supabase.auth.signOut();
+        dashboard.style.display = 'none';
+        authContainer.style.display = 'block';
+        document.getElementById('loginEmail').value = '';
+        document.getElementById('loginPassword').value = '';
+    }
+
+    function showDashboard(email) {
+        authContainer.style.display = 'none';
+        dashboard.style.display = 'block';
+        document.getElementById('userEmail').innerText = email;
+    }
+</script>
+
+</body>
+</html>
